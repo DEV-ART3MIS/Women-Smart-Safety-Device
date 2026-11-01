@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERSS-112 CAD | Police Emergency Dispatch & Tactical Command Console</title>
+  <meta name="description" content="Official emergency response CAD dispatch interface for police and government officers. Real-time satellite tracking, biometric panic telemetry, and patrol unit routing.">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body style="background: #050811; overflow-y: auto;">
+
+  <!-- ========================================================================
+       TACTICAL CAD COMMAND HEADER
+       ======================================================================== -->
+  <header class="site-header" style="background: rgba(8, 12, 22, 0.95); border-bottom: 1px solid rgba(56, 189, 248, 0.2);">
+    <div class="container-fluid nav-inner" style="height: 64px;">
+      <div style="display: flex; align-items: center; gap: 1.25rem;">
+        <a href="index.html" class="brand-logo" style="font-size: 1.1rem;">
+          <span class="brand-badge" style="background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);">
+            <i data-lucide="radio"></i>
+          </span>
+          <span class="brand-text">ERSS<span>112 CAD</span></span>
+        </a>
+        <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); display: none; @media(min-width: 900px){display:flex;} gap: 1.25rem; border-left: 1px solid var(--border-medium); padding-left: 1.25rem;">
+          <div>STATION: <strong class="text-cyan">SOUTH RANGE CENTRAL COMMAND</strong></div>
+          <div>OFFICER: <strong style="color:#FFF;">ACP VIKRAM RATHORE</strong></div>
+          <div>FREQ: <strong class="text-emerald">CH-08 ENCRYPTED</strong></div>
+        </div>
+      </div>
+
+      <!-- Quick Metrics in Header -->
+      <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div style="display: flex; gap: 1.25rem; font-family: var(--font-mono); font-size: 0.75rem;">
+          <div>
+            <span style="color:var(--text-muted);">ACTIVE SOS:</span> 
+            <span class="text-crimson" style="font-weight:700;"><span id="activeIncidentCount">1</span> CRITICAL</span>
+          </div>
+          <div style="display: none; @media(min-width: 768px){display:block;}">
+            <span style="color:var(--text-muted);">PATROLS ON BEAT:</span> 
+            <span class="text-emerald" style="font-weight:700;">28 UNITS</span>
+          </div>
+          <div style="display: none; @media(min-width: 768px){display:block;}">
+            <span style="color:var(--text-muted);">AVG INTERDICTION:</span> 
+            <span class="text-cyan" style="font-weight:700;">3m 14s</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <button id="audioToggleBtn" class="btn btn-outline" style="padding: 0.35rem 0.65rem;" title="Toggle Tactical Police Radio Chimes">
+            <i data-lucide="volume-2" id="audioIcon" style="width: 15px;"></i>
+          </button>
+          <a href="dashboard-woman.html" class="role-pill woman-portal">
+            <span class="pulse-dot crimson"></span>
+            <span>Switch to Woman's Device Portal</span>
+          </a>
+          <a href="index.html" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+            <span>Home</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       CAD 3-PANEL REAL-TIME CONSOLE
+       ======================================================================== -->
+  <main class="cad-console-layout">
+
+    <!-- PANEL 1: INCOMING INCIDENT QUEUE -->
+    <section class="cad-panel">
+      <div class="cad-panel-header">
+        <div class="cad-panel-title">
+          <i data-lucide="alert-triangle" style="color: var(--crimson-500); width: 16px;"></i>
+          <span>CAD Incident Queue</span>
+        </div>
+        <span class="badge badge-crimson">LIVE TELEMETRY</span>
+      </div>
+
+      <div class="cad-panel-body" style="padding: 0.75rem;">
+        <div style="margin-bottom: 0.75rem; display: flex; gap: 0.5rem;">
+          <button class="badge badge-crimson" style="cursor: pointer; border: none;">CRITICAL</button>
+          <button class="badge badge-slate" style="cursor: pointer; border: none;">DISPATCHED</button>
+          <button class="badge badge-slate" style="cursor: pointer; border: none;">RESOLVED</button>
+        </div>
+
+        <!-- Incident Tickets Container -->
+        <div id="incidentQueueList" class="incident-queue">
+          <!-- Rendered dynamically by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 2: INTERACTIVE TACTICAL MAP (LEAFLET) -->
+    <section class="cad-panel" style="position: relative;">
+      <div class="cad-panel-header">
+        <div class="cad-panel-title">
+          <i data-lucide="compass" style="color: var(--cyan-500); width: 16px;"></i>
+          <span>Tactical Geographic Radar & Interdiction Grid</span>
+        </div>
+        <div style="display: flex; gap: 0.75rem; font-family: var(--font-mono); font-size: 0.75rem;">
+          <span class="text-emerald">● SAT-LOCK: 14 NavIC/GPS</span>
+          <span class="text-cyan">● GIS LAYER: CARTO-DARK</span>
+        </div>
+      </div>
+
+      <div class="map-canvas-container">
+        <!-- Interactive Leaflet Map -->
+        <div id="tacticalMap"></div>
+
+        <!-- Radar Sweep Decoration -->
+        <div class="radar-sweep-overlay">
+          <div class="radar-sweep-arm"></div>
+          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 8px; color: rgba(6, 182, 212, 0.5);">
+            RADAR 1.5KM
+          </div>
+        </div>
+
+        <!-- Floating Map Legend -->
+        <div style="position: absolute; bottom: 1rem; left: 1rem; background: rgba(8, 12, 22, 0.88); backdrop-filter: blur(8px); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; font-size: 0.75rem; font-family: var(--font-mono); z-index: 500; display: flex; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#EF4444;"></span> Victim SOS
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:#0284C7;"></span> PCR Patrol Van
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <span style="color:#38BDF8;">- - -</span> Interdiction Route
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 3: VICTIM DOSSIER, BIOMETRICS & DISPATCH COMMAND -->
+    <section class="cad-panel cad-panel-right">
+      <div class="cad-panel-header">
+        <div class="cad-panel-title">
+          <i data-lucide="user-x" style="color: var(--crimson-500); width: 16px;"></i>
+          <span>Victim Telemetry Dossier</span>
+        </div>
+        <span id="detailStatusBadge" class="badge badge-crimson">UNACKNOWLEDGED</span>
+      </div>
+
+      <div class="cad-panel-body">
+        <!-- Victim Identification -->
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h3 id="detailVictimName" style="font-size: 1.15rem; color: #FFF; margin-bottom: 0.2rem;">
+                Aanya Sharma
+              </h3>
+              <div id="detailVictimMeta" style="font-size: 0.8rem; color: var(--text-secondary);">
+                Age: 23 • Blood: B+ Positive • Hardware: ESP32 Powerbank Device (10×6×5 cm)
+              </div>
+            </div>
+            <span class="badge badge-slate" id="detailIncidentId">CAD-DL-8839</span>
+          </div>
+
+          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-size: 0.8rem;">
+            <div style="color: var(--text-muted);">PRIMARY CONTACT (MOTHER):</div>
+            <div style="color: #FFF; font-weight: 600; display: flex; justify-content: space-between;">
+              <span>Dr. Priya Sharma</span>
+              <span class="font-mono text-cyan">+91 98450 12384</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MPU6050 6-Axis Assault Impact & Motion Graph -->
+        <div class="biometric-card">
+          <div class="flex-between">
+            <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase;">
+              MPU6050 Physical Assault Dynamics
+            </div>
+            <span id="detailBpm" class="text-crimson font-mono" style="font-size: 0.85rem; font-weight: 700;">
+              2.8G VIOLENT STRUGGLE
+            </span>
+          </div>
+
+          <!-- Dynamic HTML5 Canvas Shock & Pulse Monitor -->
+          <canvas id="ecgCanvas" class="pulse-graph-canvas"></canvas>
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem; display: flex; justify-content: space-between;">
+            <span>MPU6050 Accelerometer + Gyroscope (I2C)</span>
+            <span class="text-amber">Fall / Strike Shock Confirmed</span>
+          </div>
+        </div>
+
+        <!-- MAX9814 Ambient Audio Spectrogram -->
+        <div class="biometric-card">
+          <div class="flex-between">
+            <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase;">
+              MAX9814 AGC Ambient Audio Buffer
+            </div>
+            <span class="badge badge-emerald" style="font-size: 0.65rem;">LIVE STREAM (GPIO 35)</span>
+          </div>
+
+          <!-- Animated Audio Bars -->
+          <div id="spectrogramContainer" class="audio-spectrogram">
+            <!-- Rendered by JS -->
+          </div>
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem; display: flex; justify-content: space-between;">
+            <span>Low-noise Auto Gain Microphone</span>
+            <span class="text-cyan">MicroSD Blackbox Backup Active</span>
+          </div>
+        </div>
+
+        <!-- Location & Satellite Coordinates -->
+        <div style="background: var(--bg-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.9rem; margin-bottom: 1.25rem; font-size: 0.8rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">LOCATION:</span>
+            <span id="detailLocation" style="color: #FFF; font-weight: 600;">Near IIT Delhi Outer Gate</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">COORDINATES:</span>
+            <span id="detailCoords" class="font-mono text-cyan">28.5412° N, 77.2014° E</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">ASSIGNED PATROL:</span>
+            <span id="detailAssignedUnit" class="text-emerald" style="font-weight: 700;">UNASSIGNED</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 0.4rem;">
+            <span style="color: var(--text-muted);">ESTIMATED ARRIVAL:</span>
+            <span id="detailEta" class="font-mono text-amber">Calculating...</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 0.4rem;">
+            <span style="color: var(--text-muted);">TRAFFIC CCTV OVERRIDE:</span>
+            <span id="detailCctvId" class="font-mono text-cyan">CCTV-STH-088-PTZ</span>
+          </div>
+        </div>
+
+        <!-- High Consequence CAD Dispatch Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          <button id="btnDispatchUnit" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 0.75rem;">
+            <i data-lucide="siren"></i>
+            <span>DISPATCH NEAREST PATROL (PCR BRAVO-12)</span>
+          </button>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <button id="btnLockCctv" class="btn btn-cad" style="font-size: 0.75rem; padding: 0.6rem;">
+              <i data-lucide="video"></i>
+              <span>LOCK CCTV PTZ</span>
+            </button>
+            <button id="btnResolveCase" class="btn btn-tactical" style="font-size: 0.75rem; padding: 0.6rem;">
+              <i data-lucide="check-check"></i>
+              <span>MARK SECURED</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Platform Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/officer-dashboard.js"></script>
+  <script>
+    lucide.createIcons();
+
+    // Audio Mute toggle in header
+    const audioBtn = document.getElementById('audioToggleBtn');
+    const audioIcon = document.getElementById('audioIcon');
+    if (audioBtn) {
+      audioBtn.addEventListener('click', () => {
+        const isMuted = window.tacticalAudio.toggleMute();
+        audioBtn.classList.toggle('btn-danger-outline', isMuted);
+        if (isMuted) {
+          audioIcon.setAttribute('data-lucide', 'volume-x');
+        } else {
+          audioIcon.setAttribute('data-lucide', 'volume-2');
+          window.tacticalAudio.playClick();
+        }
+        lucide.createIcons();
+      });
+    }
+  </script>
+</body>
+</html>

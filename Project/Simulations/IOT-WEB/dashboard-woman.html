@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardian Shield Portal | Personal Safety & Device Telemetry</title>
+  <meta name="description" content="Dedicated personal safety command portal for AegisCore wearable users. Manage live telemetry, geofenced safe zones, emergency contacts, and the Walk With Me virtual escort.">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="tactical-grid-bg">
+
+  <!-- ========================================================================
+       TOP NAVIGATION BAR
+       ======================================================================== -->
+  <header class="site-header">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand-logo">
+        <span class="brand-badge" style="background: linear-gradient(135deg, #F43F5E 0%, #EF4444 100%);">
+          <i data-lucide="shield-check"></i>
+        </span>
+        <span class="brand-text">GUARDIAN<span>SHIELD</span></span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link"><i data-lucide="arrow-left" style="width:16px;"></i> Product Home</a></li>
+          <li><a href="#panic-hub" class="nav-link active"><i data-lucide="bell-ring" style="width:16px;"></i> SOS Hub</a></li>
+          <li><a href="#companion" class="nav-link"><i data-lucide="footprints" style="width:16px;"></i> Walk With Me</a></li>
+          <li><a href="#safe-zones" class="nav-link"><i data-lucide="map-pin" style="width:16px;"></i> Safe Zones</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button id="audioToggleBtn" class="btn btn-outline" style="padding: 0.4rem 0.75rem;" title="Toggle Tactical Audio">
+          <i data-lucide="volume-2" id="audioIcon" style="width: 16px;"></i>
+        </button>
+        <a href="dashboard-officer.html" class="role-pill officer-portal">
+          <span class="pulse-dot cyan"></span>
+          <span>Switch to Police CAD 112</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 0.5rem; padding-left: 0.75rem; border-left: 1px solid var(--border-medium);">
+          <div style="width: 34px; height: 34px; border-radius: 50%; background: #F43F5E; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+            AS
+          </div>
+          <div style="display: none; @media(min-width: 768px){display:block;}">
+            <div style="font-size: 0.85rem; font-weight: 600; line-height: 1.2;">Aanya Sharma</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">Aegis Ring Mk.3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       ACTIVE EMERGENCY SOS BROADCAST BANNER (CONDITIONAL)
+       ======================================================================== -->
+  <div id="activeSosBanner" style="display: none; background: linear-gradient(90deg, #991B1B, #EF4444, #991B1B); border-bottom: 2px solid #F87171; padding: 1rem 0; box-shadow: 0 4px 25px rgba(239, 68, 68, 0.5);">
+    <div class="container flex-between" style="flex-wrap: wrap; gap: 1rem;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="pulse-dot crimson" style="width: 14px; height: 14px;"></span>
+        <div>
+          <div style="font-weight: 800; font-size: 1rem; color: #FFF; letter-spacing: 0.05em; text-transform: uppercase;">
+            ACTIVE EMERGENCY SOS TRANSMITTING TO POLICE CAD (<span id="liveIncidentIdSpan">CAD-DL-LIVE</span>)
+          </div>
+          <div style="font-size: 0.8rem; color: #FEE2E2;">
+            NavIC Satellite Coordinates locked • Continuous optical pulse streaming • Nearest PCR van alerted
+          </div>
+        </div>
+      </div>
+      <button id="disarmActiveSosBtn" class="btn" style="background: white; color: #991B1B; font-weight: 700;">
+        <i data-lucide="shield-off"></i>
+        <span>Disarm / Cancel With PIN</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MAIN DASHBOARD BODY
+       ======================================================================== -->
+  <main class="portal-layout container">
+
+    <!-- Header / Status Banner -->
+    <div class="portal-header">
+      <div class="portal-title-group">
+        <h1>
+          <i data-lucide="sparkles" style="color: #F43F5E; width: 28px;"></i>
+          Guardian Safety Console
+        </h1>
+        <div class="portal-meta">
+          <span>Device: <strong>Smart Safety Powerbank (10×6×5 cm)</strong></span>
+          <span>•</span>
+          <span>MCU: <strong class="font-mono text-cyan">ESP32 DevKit V1</strong></span>
+          <span>•</span>
+          <span>Firmware: <strong class="font-mono">v2.4.1 (FreeRTOS)</strong></span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <span class="badge badge-emerald" style="padding: 0.4rem 0.8rem;">
+          <span class="pulse-dot emerald"></span> ALL 20 COMPONENTS ARMED
+        </span>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         SECTION: DEVICE WORKING STATUS & REAL-TIME HARDWARE KPIS
+         ====================================================================== -->
+    <div style="margin-bottom: 2rem;">
+      <div class="kpi-section-header">
+        <div>
+          <span class="badge badge-cyan" style="font-size: 0.72rem; margin-bottom: 0.35rem;">
+            // HARDWARE TELEMETRY & WORKING STATUS
+          </span>
+          <h2 style="font-size: 1.5rem; color: #FFF;">Powerbank Safety Device: Live Hardware KPIs</h2>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          <span class="badge badge-emerald" style="padding: 0.4rem 0.8rem;">
+            <span class="pulse-dot emerald"></span> ESP32 ACTIVE POLLING (2.5s)
+          </span>
+        </div>
+      </div>
+
+      <!-- 4 Core Hardware KPI Cards Grid -->
+      <div class="kpi-grid">
+
+        <!-- KPI 1: 18650 Li-ion Battery & TP4056 Power Architecture -->
+        <div class="kpi-card battery">
+          <div class="kpi-head">
+            <span class="kpi-title">
+              <i data-lucide="battery-charging" style="color: var(--emerald-500); width: 16px;"></i>
+              <span>18650 Li-ion Cell</span>
+            </span>
+            <span class="badge badge-emerald" id="kpiBatteryStatusBadge">TP4056 OK</span>
+          </div>
+
+          <div style="display: flex; align-items: baseline; justify-content: space-between;">
+            <div class="kpi-main-val">
+              <span id="kpiBatteryVal">82%</span>
+              <span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;" id="kpiVoltageVal">(3.94V)</span>
+            </div>
+            <span class="badge badge-slate" style="font-size: 0.7rem;">3.7V NOMINAL</span>
+          </div>
+
+          <!-- Battery Level Progress Bar -->
+          <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; margin: 0.6rem 0 0.85rem; overflow: hidden;">
+            <div id="kpiBatteryBar" style="width: 82%; height: 100%; background: linear-gradient(90deg, #10B981, #06B6D4); border-radius: 3px; transition: width 0.4s ease;"></div>
+          </div>
+
+          <!-- Submetrics -->
+          <div class="kpi-submetrics">
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Charger State</span>
+              <span class="kpi-sub-val text-emerald" id="kpiChargerState">Discharging / Standby</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Cell Temperature</span>
+              <span class="kpi-sub-val" id="kpiBatteryTemp">31.2°C (Normal)</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Health & Cycles</span>
+              <span class="kpi-sub-val">99% (14 Cycles)</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Estimated Autonomy</span>
+              <span class="kpi-sub-val text-cyan">~14 Days Standby</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI 2: NEO-6M High-Precision Geolocation -->
+        <div class="kpi-card gps">
+          <div class="kpi-head">
+            <span class="kpi-title">
+              <i data-lucide="satellite" style="color: var(--cyan-500); width: 16px;"></i>
+              <span>NEO-6M Geolocation</span>
+            </span>
+            <span class="badge badge-cyan" id="kpiGpsFixBadge">3D SATELLITE FIX</span>
+          </div>
+
+          <div class="kpi-main-val" style="font-size: 1.28rem; line-height: 1.35;">
+            <div id="kpiCoordsDisplay" style="color: #38BDF8;">
+              <span id="kpiLatVal">28.5412° N</span>, <span id="kpiLngVal">77.2014° E</span>
+            </div>
+          </div>
+
+          <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem; display: flex; align-items: center; justify-content: space-between;">
+            <span><i data-lucide="map-pin" style="width: 12px; vertical-align: middle;"></i> IIT Delhi Outer Sector Road</span>
+            <button class="btn btn-outline" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="navigator.clipboard.writeText('28.5412, 77.2014'); alert('Coordinates copied to clipboard!');">
+              Copy Lat/Lng
+            </button>
+          </div>
+
+          <!-- Submetrics -->
+          <div class="kpi-submetrics">
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Active Satellites</span>
+              <span class="kpi-sub-val text-cyan" id="kpiSatCount">9 Sats Locked</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Horizontal Precision</span>
+              <span class="kpi-sub-val text-emerald" id="kpiPrecision">2.4m CEP (Patch Ant)</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Altitude ASL</span>
+              <span class="kpi-sub-val" id="kpiAltitude">216 Meters</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Ground Velocity</span>
+              <span class="kpi-sub-val" id="kpiVelocity">0.0 km/h (Stationary)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI 3: MPU6050 6-Axis Motion & Fall Detection -->
+        <div class="kpi-card mpu">
+          <div class="kpi-head">
+            <span class="kpi-title">
+              <i data-lucide="activity" style="color: var(--amber-500); width: 16px;"></i>
+              <span>MPU6050 6-Axis Motion</span>
+            </span>
+            <span class="badge badge-emerald" id="kpiMpuBadge">NORMAL TRANSIT</span>
+          </div>
+
+          <div style="display: flex; align-items: baseline; justify-content: space-between;">
+            <div class="kpi-main-val">
+              <span id="kpiTotalGVal">0.99 g</span>
+              <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 500;">Net G-Force</span>
+            </div>
+            <button id="btnSimulateFall" class="btn btn-danger-outline" style="padding: 0.25rem 0.55rem; font-size: 0.7rem;" title="Simulate physical assault or fall shock">
+              ⚡ Test Fall Shock
+            </button>
+          </div>
+
+          <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.35rem;">
+            Threat Status: <strong id="kpiMpuThreat" class="text-emerald">Stable • No Physical Assault Detected</strong>
+          </div>
+
+          <!-- Submetrics -->
+          <div class="kpi-submetrics">
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">3-Axis Accel (X,Y,Z)</span>
+              <span class="kpi-sub-val font-mono" id="kpiAccelReadout" style="font-size: 0.72rem;">X:+0.04 Y:-0.02 Z:+0.98g</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">3-Axis Gyro (deg/s)</span>
+              <span class="kpi-sub-val font-mono" id="kpiGyroReadout" style="font-size: 0.72rem;">Gx:0.8 Gy:-1.2 Gz:0.1</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Assault Threshold</span>
+              <span class="kpi-sub-val text-amber">>2.50 g (Impact Shock)</span>
+            </div>
+            <div class="kpi-sub-item">
+              <span class="kpi-sub-label">Vibration Haptic Driver</span>
+              <span class="kpi-sub-val text-emerald">GPIO 25 (2N2222)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI 4: SIM800L Distress Signal Sent to Police CAD -->
+        <div class="kpi-card gsm">
+          <div class="kpi-head">
+            <span class="kpi-title">
+              <i data-lucide="radio" style="color: var(--rose-500); width: 16px;"></i>
+              <span>SIM800L Distress Link</span>
+            </span>
+            <span class="badge badge-cyan" id="kpiDistressBadge">STANDBY (ARMED)</span>
+          </div>
+
+          <div class="kpi-main-val" style="font-size: 1.25rem; line-height: 1.3;">
+            <span id="kpiDistressSignalText" class="text-emerald">READY FOR DISPATCH</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-top: 0.2rem;">
+            <span style="color: var(--text-muted);">Police CAD Gateway:</span>
+            <span class="text-cyan font-mono" style="font-weight: 600;">ERSS 112 DIRECT LINK</span>
+          </div>
+
+          <!-- Live SIM800L Transmission Log Console -->
+          <div id="sim800lTerminalBox" class="sim-terminal-box">
+            <div class="sim-terminal-line">> AT+CREG? -> +CREG: 0,1 [REGISTERED HOME NETWORK]</div>
+            <div class="sim-terminal-line">> AT+CSQ -> +CSQ: 24,0 [RSSI: -78dBm, EXCELLENT]</div>
+            <div class="sim-terminal-line">> AT+CGATT=1 -> GPRS ATTACHED TO DISPATCH SERVER</div>
+            <div class="sim-terminal-line">> NEO-6M: $GPRMC VALID 3D FIX LOCKED (9 SATS)</div>
+            <div class="sim-terminal-line text-emerald">> SYSTEM READY: ARMED FOR GPIO 34 TACTILE TRIGGER</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         SECTION: EMERGENCY PANIC TRIGGER HUB & OLED MIRROR
+         ====================================================================== -->
+    <div id="panic-hub" class="panic-trigger-hero">
+      <div style="display: grid; grid-template-columns: 1fr 280px; gap: 2rem; align-items: center;">
+        <div>
+          <span class="badge badge-crimson" style="margin-bottom: 1rem;">
+            HIGH-CONSEQUENCE TACTILE DISPATCH HUB
+          </span>
+          <h2 style="font-size: 2rem; margin-bottom: 0.5rem; color: #FFF;">Immediate SOS Activation</h2>
+          <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            In an assault, pinch the physical tactile button on your powerbank (GPIO 34). On this console, tap below to simulate an emergency trigger. A 15-second grace countdown initiates before dispatching to Police CAD via SIM800L.
+          </p>
+
+          <!-- Trigger Mode Switcher -->
+          <div style="display: inline-flex; align-items: center; gap: 1.5rem; background: rgba(0, 0, 0, 0.4); padding: 0.6rem 1.25rem; border-radius: var(--radius-full); border: 1px solid var(--border-subtle);">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #FFF;">
+              <input type="radio" id="modeSilentRadio" name="portalMode" value="SILENT" checked style="accent-color: var(--cyan-500);">
+              <span><strong>Silent Duress</strong> (Police alerted invisibly)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #FFF;">
+              <input type="radio" id="modeAudibleRadio" name="portalMode" value="AUDIBLE" style="accent-color: var(--crimson-500);">
+              <span><strong>110dB Siren Burst</strong> (Acoustic deterrent)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Right Side: The Big SOS Button & OLED Screen Mirror -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+          <!-- The Big Tactical SOS Trigger Button -->
+          <button id="primarySosButton" class="big-sos-button" style="margin: 0;" aria-label="Trigger Emergency SOS">
+            <span>SOS</span>
+            <span class="big-sos-subtext">HOLD 0.4 SEC</span>
+          </button>
+
+          <!-- 0.96" OLED Hardware Mirror Screen (Digital Twin) -->
+          <div class="oled-mirror-frame" style="width: 100%; max-width: 260px;">
+            <div class="oled-screen-header">
+              <span>0.96" OLED (I2C)</span>
+              <span id="oledBatPill">BAT: 82%</span>
+            </div>
+            <div class="oled-line">
+              <span>GPS:</span>
+              <span id="oledGpsLine">OK [3D FIX]</span>
+            </div>
+            <div class="oled-line">
+              <span>GSM:</span>
+              <span id="oledGsmLine">OK [-78dBm]</span>
+            </div>
+            <div class="oled-line">
+              <span>MPU:</span>
+              <span id="oledMpuLine">0.99G STABLE</span>
+            </div>
+            <div class="oled-line" id="oledStatusLine" style="color: #10B981; font-weight: 700; border-top: 1px dashed rgba(6, 182, 212, 0.4); padding-top: 0.2rem; margin-top: 0.2rem;">
+              >> SYSTEM ARMED <<
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         TWO COLUMN LAYOUT: VIRTUAL ESCORT & SAFE ZONES + CONTACTS
+         ====================================================================== -->
+    <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 2rem; margin-bottom: 3rem;">
+
+      <!-- Left Column: "Walk With Me" Virtual Companion -->
+      <div class="card" id="companion">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="footprints" style="color: var(--cyan-500);"></i>
+            <span>"Walk With Me" Virtual Companion</span>
+          </div>
+          <span id="walkStatusBadge" class="badge badge-slate">STANDBY</span>
+        </div>
+
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Activate before walking home at night, through transit tunnels, or isolated areas. The system creates a continuous breadcrumb telemetry tunnel. If you fail to check in before the timer reaches zero, an automatic high-priority police SOS is triggered.
+        </p>
+
+        <!-- Timer Circle Container -->
+        <div style="background: var(--bg-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
+          <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase;">
+            Journey Safety Window
+          </div>
+          <div id="walkTimerDisplay" style="font-family: var(--font-mono); font-size: 3rem; font-weight: 800; color: #38BDF8; margin: 0.5rem 0;">
+            25:00
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">
+            Periodic Check-In Interval: <strong>Every 10 Minutes</strong>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button id="startWalkBtn" class="btn btn-cad" data-running="false">
+            <i data-lucide="play"></i>
+            <span>Start "Walk With Me" Escort</span>
+          </button>
+          <button id="walkCheckinBtn" class="btn btn-tactical" style="display: none;">
+            <i data-lucide="check-circle-2"></i>
+            <span>I Am Safe (+10m Check-In)</span>
+          </button>
+        </div>
+
+        <!-- Shareable Link Generator -->
+        <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.8rem; font-weight: 600; color: #FFF; margin-bottom: 0.4rem;">
+            Encrypted Live Journey Link (For Trusted Friends)
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" readonly value="https://aegiscore.live/escort/token-99824b-x9" style="flex: 1; background: var(--bg-secondary); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); color: var(--cyan-500); font-family: var(--font-mono); font-size: 0.8rem; padding: 0.5rem 0.75rem; outline: none;">
+            <button class="btn btn-outline" onclick="navigator.clipboard.writeText('https://aegiscore.live/escort/token-99824b-x9'); alert('Encrypted tracking link copied to clipboard!');" title="Copy tracking link">
+              <i data-lucide="copy" style="width: 16px;"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Safe Zones & Emergency Circle -->
+      <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+
+        <!-- Safe Zones (Geofencing) -->
+        <div class="card" id="safe-zones">
+          <div class="card-header">
+            <div class="card-title">
+              <i data-lucide="radar" style="color: var(--emerald-500);"></i>
+              <span>Geofenced Safe Zones</span>
+            </div>
+            <button class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="alert('Safe Zone configuration panel: Radius updated to 500m.');">
+              + Add Zone
+            </button>
+          </div>
+          <div id="safeZonesContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Trusted Escalation Circle -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i data-lucide="users" style="color: var(--indigo-500);"></i>
+              <span>Escalation Contact Hierarchy</span>
+            </div>
+            <span class="badge badge-emerald">3 PRIORITY NODES</span>
+          </div>
+          <div id="contactsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Diagnostic Self-Test Ribbon -->
+    <div class="card" style="background: rgba(10, 15, 29, 0.7);">
+      <div class="flex-between" style="flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h4 style="font-size: 1rem; color: #FFF; margin-bottom: 0.2rem;">Hardware Self-Diagnostic & Bus Matrix</h4>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">ESP32 DevKit V1 active polling: All modules connected & verified on I2C, UART1, UART2, and SPI buses.</p>
+        </div>
+        <div style="display: flex; gap: 1.5rem; font-family: var(--font-mono); font-size: 0.8rem; flex-wrap: wrap;">
+          <div><span style="color:var(--text-muted);">MPU6050:</span> <span class="text-emerald">OK (I2C 21/22)</span></div>
+          <div><span style="color:var(--text-muted);">NEO-6M:</span> <span class="text-emerald">3D FIX (UART1)</span></div>
+          <div><span style="color:var(--text-muted);">SIM800L:</span> <span class="text-emerald">ONLINE (UART2)</span></div>
+          <div><span style="color:var(--text-muted);">MICROSD:</span> <span class="text-emerald">16GB (SPI)</span></div>
+          <div><span style="color:var(--text-muted);">18650 CELL:</span> <span class="text-cyan">3.94V (TP4056)</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       EMERGENCY 15-SECOND GRACE CANCELLATION MODAL
+       ======================================================================== -->
+  <div id="emergencyCountdownModal" class="modal-backdrop">
+    <div class="modal-card">
+      <span class="badge badge-crimson" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+        <span class="pulse-dot crimson"></span> CRITICAL EMERGENCY SOS ARMED
+      </span>
+
+      <div class="countdown-timer-circle" id="countdownNumber">
+        15
+      </div>
+
+      <h3 style="font-size: 1.4rem; color: #FFF; margin-bottom: 0.5rem;">
+        Dispatching in Seconds
+      </h3>
+      <p style="font-size: 0.85rem; color: #FDA4AF; line-height: 1.5;">
+        NavIC satellite fix, live biometric pulse, and emergency audio are preparing to lock into State Police CAD-112. If this was an accidental trigger, enter your 4-digit PIN immediately to disarm.
+      </p>
+
+      <!-- PIN Input -->
+      <div class="pin-input-group">
+        <input type="password" id="cancelPinInput" maxlength="4" placeholder="••••" class="pin-digit" style="width: 140px; letter-spacing: 0.5rem; text-align: center;">
+      </div>
+
+      <div id="cancelFeedbackMsg" style="font-size: 0.8rem; min-height: 1.2rem; margin-bottom: 1rem;"></div>
+
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button id="submitCancelPinBtn" class="btn btn-outline" style="border-color: var(--emerald-500); color: #34D399; font-weight: 700;">
+          <i data-lucide="shield-check"></i>
+          <span>Verify PIN & Disarm (Demo: 1122)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/woman-dashboard.js"></script>
+  <script>
+    lucide.createIcons();
+
+    // Audio Mute toggle in header
+    const audioBtn = document.getElementById('audioToggleBtn');
+    const audioIcon = document.getElementById('audioIcon');
+    if (audioBtn) {
+      audioBtn.addEventListener('click', () => {
+        const isMuted = window.tacticalAudio.toggleMute();
+        audioBtn.classList.toggle('btn-danger-outline', isMuted);
+        if (isMuted) {
+          audioIcon.setAttribute('data-lucide', 'volume-x');
+        } else {
+          audioIcon.setAttribute('data-lucide', 'volume-2');
+          window.tacticalAudio.playClick();
+        }
+        lucide.createIcons();
+      });
+    }
+  </script>
+</body>
+</html>
